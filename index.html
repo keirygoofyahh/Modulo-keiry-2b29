@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🦁 Aventuras con Animalitos</title>
+  <style>
+    * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; user-select:none; }
+    body {
+      font-family: 'Comic Sans MS','Segoe UI',sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:10px;
+      overflow-x:hidden;
+    }
+    .box {
+      width:100%; max-width:720px; background:#fff; border-radius:32px;
+      padding:18px; box-shadow:0 20px 60px rgba(0,0,0,0.35); margin:10px;
+    }
+    .hdr {
+      text-align:center; padding:16px; background:linear-gradient(90deg,#ffecd2,#fcb69f,#a8edea);
+      border-radius:24px; margin-bottom:14px; animation:bounce 2.5s infinite;
+      border:3px solid rgba(255,255,255,0.6);
+    }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    .hdr h1 { font-size:1.8rem; color:#c0392b; text-shadow:1px 1px 0 #fff; }
+    .hdr p { font-size:1rem; color:#555; margin-top:4px; }
+
+    .scr { display:none; animation:fadeIn .4s ease; }
+    .scr.active { display:block; }
+    @keyframes fadeIn { from{opacity:0; transform:scale(0.98)} to{opacity:1; transform:scale(1)} }
+
+    .btnBig {
+      width:100%; padding:20px; margin:12px 0; font-size:1.35rem; border:none; border-radius:28px;
+      color:#fff; font-weight:bold; cursor:pointer; transition:all .18s;
+      display:flex; align-items:center; justify-content:center; gap:12px;
+      box-shadow:0 6px 0 rgba(0,0,0,0.25);
+    }
+    .btnBig:active { transform:translateY(5px); box-shadow:0 2px 0 rgba(0,0,0,0.2); }
+    .btnBig:hover { transform:translateY(-2px); box-shadow:0 8px 0 rgba(0,0,0,0.3); }
+    .btnBig.purple { background:linear-gradient(135deg,#667eea,#764ba2); }
+    .btnBig.green { background:linear-gradient(135deg,#00b894,#00cec9); }
+    .btnBig.pink { background:linear-gradient(135deg,#fd79a8,#fab1a0); }
+    .btnBig.orange { background:linear-gradient(135deg,#f39c12,#e67e22); }
+    .btnBig.blue { background:linear-gradient(135deg,#74b9ff,#0984e3); }
+
+    .ageRow { display:flex; justify-content:center; gap:20px; margin:20px 0; flex-wrap:wrap; }
+    .ageBtn {
+      width:100px; height:100px; border-radius:50%; border:5px solid #fff;
+      background:linear-gradient(135deg,#74b9ff,#0984e3); color:#fff;
+      font-size:1.8rem; font-weight:bold; cursor:pointer; transition:all .25s;
+      box-shadow:0 7px 0 #0768b3; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; line-height:1.1;
+    }
+    .ageBtn small { font-size:.7rem; display:block; margin-top:2px; }
+    .ageBtn.sel { transform:scale(1.15); border-color:#27ae60; box-shadow:0 10px 0 #00a389; 
+      background:linear-gradient(135deg,#55efc4,#00b894); animation:pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1.15)} 50%{transform:scale(1.22)} }
+
+    .lvlGrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:16px 0; }
+    .lvlCard {
+      padding:20px 12px; border:4px solid #3498db; border-radius:24px;
+      background:#fff; cursor:pointer; text-align:center; font-weight:bold;
+      color:#2c3e50; transition:all .22s; position:relative; overflow:hidden;
+    }
+    .lvlCard::before {
+      content:''; position:absolute; top:0; left:-100%; width:100%; height:100%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.6),transparent);
+      transition:left .5s; pointer-events:none;
+    }
+    .lvlCard:hover::before { left:100%; }
+    .lvlCard .e { font-size:2.5rem; display:block; margin-bottom:6px; }
+    .lvlCard small { display:block; font-size:.85rem; color:#7f8c8d; margin-top:4px; }
+    .lvlCard:hover { 
+      background:linear-gradient(135deg,#a8e6cf,#83c5be); border-color:#27ae60; 
+      transform:scale(1.05); box-shadow:0 10px 25px rgba(0,0,0,0.15); 
+    }
+    .lvlCard.locked { opacity:.55; cursor:not-allowed; filter:grayscale(0.4); }
+    .lvlCard.locked:hover { transform:none; box-shadow:none; }
+
+    .gHdr {
+      display:flex; justify-content:space-between; align-items:center; padding:10px 12px;
+      background:#f8f9fa; border-radius:18px; margin-bottom:12px; flex-wrap:wrap; gap:8px;
+      border:2px solid #e9ecef;
+    }
+    .stRow { display:flex; gap:4px; font-size:1.4rem; }
+    .st { color:#ddd; transition:all .3s; }
+    .st.on { color:#f1c40f; animation:starPop .4s ease; text-shadow:0 0 10px rgba(241,196,15,0.8); }
+    @keyframes starPop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+    .prog { font-weight:bold; color:#2c3e50; background:#e9ecef; padding:6px 14px; border-radius:20px; font-size:.95rem; }
+
+    .bigAnimal { 
+      font-size:5.5rem; text-align:center; margin:12px 0; 
+      animation:floatAnimal 2.8s ease-in-out infinite; 
+      cursor:pointer; position:relative; transition:transform .2s;
+      text-shadow:0 4px 8px rgba(0,0,0,0.2);
+    }
+    .bigAnimal:active { transform:scale(0.93); }
+    .bigAnimal.playing { animation:shake .35s, floatAnimal 2.8s ease-in-out infinite; }
+    @keyframes floatAnimal { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-10px)} 75%{transform:translateX(10px)} }
+
+    .wordDisplay {
+      font-size:2.4rem; color:#1a1a2e; margin:10px 0; padding:18px 20px;
+      background:linear-gradient(135deg,#fff9e6,#fff3cd); border-radius:26px;
+      border:4px solid #ffc107; text-align:center; font-weight:800;
+      min-height:70px; display:flex; align-items:center; justify-content:center;
+      letter-spacing:4px; text-transform:uppercase; animation:wordIn .45s ease;
+      box-shadow:0 5px 0 rgba(255,193,7,0.35);
+    }
+    @keyframes wordIn { 0%{transform:scale(0.88); opacity:0} 100%{transform:scale(1); opacity:1} }
+
+    .hint { font-size:1.1rem; color:#6c757d; margin:8px 0 14px; font-style:italic; text-align:center; min-height:26px; }
+
+    .optGrid { display:grid; gap:12px; margin:16px 0; }
+    .optGrid.g2 { grid-template-columns:1fr 1fr; }
+    .optGrid.g3 { grid-template-columns:1fr 1fr 1fr; }
+    .optBtn {
+      padding:22px 12px; font-size:1.8rem; border:4px solid #e74c3c; border-radius:22px;
+      background:#fff; cursor:pointer; transition:all .18s; font-weight:bold; color:#2c3e50;
+      min-height:70px; display:flex; align-items:center; justify-content:center;
+      box-shadow:0 5px 0 rgba(231,76,60,0.35);
+    }
+    .optBtn:hover { background:#fff8e1; transform:translateY(-3px); box-shadow:0 7px 0 rgba(231,76,60,0.45); }
+    .optBtn:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(231,76,60,0.3); }
+    .optBtn.ok { 
+      background:linear-gradient(135deg,#00b894,#00cec9)!important; border-color:#00a389!important; 
+      animation:pop .38s; color:#fff!important; box-shadow:0 5px 0 #00897b!important; 
+    }
+    .optBtn.no { 
+      background:linear-gradient(135deg,#fd79a8,#e17055)!important; border-color:#d63031!important; 
+      animation:shakeBtn .38s; color:#fff!important; box-shadow:0 5px 0 #c0392b!important; 
+    }
+    @keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.16)} 100%{transform:scale(1)} }
+    @keyframes shakeBtn { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+    .sylArea { display:flex; justify-content:center; gap:10px; min-height:70px; margin:14px 0; padding:14px; background:#f8f9fa; border-radius:20px; border:3px dashed #adb5bd; flex-wrap:wrap; }
+    .sylDone { font-size:1.7rem; padding:9px 18px; background:linear-gradient(135deg,#00b894,#00cec9); color:#fff; border-radius:16px; font-weight:bold; animation:pop .32s; margin:4px; box-shadow:0 4px 0 #00897b; }
+    .sylBtn { 
+      font-size:1.6rem; background:linear-gradient(135deg,#74b9ff,#0984e3); color:#fff; 
+      border:3px solid #0768b3; padding:12px 18px; border-radius:16px; cursor:pointer;
+      margin:4px; transition:all .18s; box-shadow:0 4px 0 #0768b3;
+    }
+    .sylBtn:active { transform:translateY(3px); box-shadow:0 2px 0 #0768b3; }
+    .sylBtn.used { opacity:.45; cursor:not-allowed; transform:scale(0.96); }
+
+    .cntArea { display:flex; justify-content:center; gap:10px; margin:16px 0; flex-wrap:wrap; min-height:60px; }
+    .cntItem { 
+      font-size:2.5rem; animation:cntPop .38s ease both; 
+      text-shadow:0 3px 6px rgba(0,0,0,0.25); cursor:pointer; transition:transform .22s;
+    }
+    .cntItem:active { transform:scale(1.25); }
+    @keyframes cntPop { 0%{transform:scale(0) rotate(-25deg); opacity:0} 100%{transform:scale(1) rotate(0); opacity:1} }
+
+    .fb { 
+      font-size:1.35rem; padding:16px; margin:14px 0; border-radius:22px; 
+      font-weight:bold; min-height:60px; display:flex; align-items:center; 
+      justify-content:center; text-align:center; line-height:1.35; 
+      animation:slideIn .32s ease;
+    }
+    @keyframes slideIn { from{opacity:0; transform:translateY(12px)} to{opacity:1; transform:translateY(0)} }
+    .fb.ok { background:linear-gradient(135deg,#00b894,#55efc4); color:#fff; box-shadow:0 5px 0 #00897b; }
+    .fb.no { background:linear-gradient(135deg,#fdcb6e,#f39c12); color:#2c3e50; box-shadow:0 5px 0 #d35400; }
+
+    .ctrls { display:flex; gap:12px; justify-content:center; margin:18px 0; flex-wrap:wrap; }
+    .cBtn { 
+      padding:14px 22px; font-size:1.1rem; border:none; border-radius:52px; 
+      cursor:pointer; font-weight:bold; transition:all .18s; 
+      display:flex; align-items:center; gap:7px;
+      box-shadow:0 5px 0 rgba(0,0,0,0.22);
+    }
+    .cBtn:hover { transform:translateY(-3px); box-shadow:0 7px 0 rgba(0,0,0,0.28); }
+    .cBtn:active { transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,0.2); }
+    .cBtn.nxt { background:linear-gradient(135deg,#6c5ce7,#a29bfe); color:#fff; }
+    .cBtn:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+    .rew { text-align:center; padding:22px 12px; }
+    .rew .emoji { font-size:4.8rem; animation:bounce .9s infinite; }
+    .rew h2 { font-size:1.7rem; color:#27ae60; margin:14px 0; text-shadow:1px 1px 0 #fff; }
+    .rew .sts { font-size:2.4rem; margin:14px 0; color:#f1c400; text-shadow:0 0 12px rgba(241,196,15,0.7); }
+    .rew p { color:#555; margin:10px 0; font-size:1.1rem; }
+
+    .stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0; }
+    .stCard { background:#f8f9fa; padding:16px; border-radius:18px; text-align:center; border:3px solid #e9ecef; }
+    .stCard .v { font-size:2rem; font-weight:bold; color:#2c3e50; }
+    .stCard .l { font-size:.9rem; color:#6c757d; }
+
+    .tipBox { 
+      background:#fff3cd; border:3px solid #ffc107; border-radius:22px; 
+      padding:18px; margin:16px 0; font-size:1rem; color:#856404; 
+      box-shadow:0 4px 0 rgba(255,193,7,0.35);
+    }
+    .tipBox h3 { color:#c0392b; margin-bottom:12px; font-size:1.15rem; }
+    .tipBox ul { padding-left:22px; }
+    .tipBox li { margin:6px 0; }
+
+    .conf { 
+      position:fixed; width:14px; height:14px; border-radius:50%; 
+      animation:fallConf 2.8s linear forwards; pointer-events:none; z-index:1000;
+      box-shadow:0 0 10px rgba(255,255,255,0.9);
+    }
+    @keyframes fallConf { 0%{transform:translateY(-30px) rotate(0); opacity:1} 100%{transform:translateY(100vh) rotate(720deg); opacity:0} }
+
+    footer { 
+      text-align:center; padding:14px; color:rgba(255,255,255,0.95); 
+      font-size:.95rem; margin-top:10px; text-shadow:1px 1px 3px rgba(0,0,0,0.35);
+    }
+
+    .confetti {
+      position:fixed; width:12px; height:12px; 
+      animation:confettiFall 3.2s linear forwards; 
+      pointer-events:none; z-index:999; border-radius:3px;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(-120px) rotate(0deg) scale(1); opacity:1; }
+      100% { transform: translateY(100vh) rotate(720deg) scale(0.8); opacity:0; }
+    }
+
+    /* === BIENVENIDA INTERACTIVA === */
+    .welcome-box { text-align:center; padding:20px; width:92%; max-width:480px; }
+    .welcome-title { font-size:2.4rem; color:#fff; margin-bottom:10px; text-shadow:2px 2px 6px rgba(0,0,0,0.35); animation:titleBounce 1.2s infinite; }
+    @keyframes titleBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+    .welcome-sub { font-size:1.25rem; color:#fff; margin-bottom:28px; text-shadow:1px 1px 3px rgba(0,0,0,0.25); }
+    .welcome-animals { display:flex; justify-content:center; gap:16px; margin:20px 0 32px; flex-wrap:wrap; }
+    .w-animal {
+      font-size:4.8rem; cursor:pointer; transition:transform .18s; filter:drop-shadow(0 5px 8px rgba(0,0,0,0.3));
+      animation:floatW 3s ease-in-out infinite;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .w-animal:nth-child(1) { animation-delay:0s; }
+    .w-animal:nth-child(2) { animation-delay:0.6s; }
+    .w-animal:nth-child(3) { animation-delay:1.2s; }
+    .w-animal:nth-child(4) { animation-delay:1.8s; }
+    @keyframes floatW { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
+    .w-animal.pop { animation:popAnim .45s ease forwards; }
+    @keyframes popAnim { 
+      0%{transform:scale(1)} 25%{transform:scale(1.35) rotate(-8deg)} 
+      50%{transform:scale(1.1) rotate(5deg)} 100%{transform:scale(1) rotate(0)} 
+    }
+    .welcome-start { max-width:280px; margin:10px auto; box-shadow:0 8px 0 rgba(0,0,0,0.25); font-size:1.4rem; }
+    .welcome-hint { color:rgba(255,255,255,0.8); font-size:.95rem; margin-top:12px; }
+    .w-particle {
+      position:fixed; width:14px; height:14px; border-radius:50%; pointer-events:none; z-index:2005;
+      animation:burstP .7s ease-out forwards;
+    }
+    @keyframes burstP {
+      0% { transform:translate(0,0) scale(1); opacity:1; }
+      100% { transform:translate(var(--tx), var(--ty)) scale(0.2); opacity:0; }
+    }
+
+    @media(max-width:520px){
+      .hdr h1 { font-size:1.55rem; }
+      .bigAnimal { font-size:4.5rem; }
+      .wordDisplay { font-size:2rem; padding:16px; letter-spacing:3px; }
+      .optBtn { font-size:1.6rem; padding:18px 10px; min-height:65px; }
+      .lvlCard { padding:16px 10px; }
+      .ageBtn { width:86px; height:86px; font-size:1.55rem; }
+      .optGrid.g3 { grid-template-columns:1fr 1fr; }
+      .stCard .v { font-size:1.75rem; }
+      .btnBig { font-size:1.2rem; padding:18px; }
+      .welcome-title { font-size:2rem; }
+      .w-animal { font-size:4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <div class="hdr">
+    <h1>🦁 Aventuras con Animalitos</h1>
+    <p>🔤 Letras • 🔤 Sílabas • 📝 Palabras • 🔢 Números • 🎨 Interactivo</p>
+  </div>
+
+  <!-- PANTALLA BIENVENIDA -->
+  <div id="s-welcome" class="scr active" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:linear-gradient(135deg,#667eea,#764ba2,#f093fb);display:flex;align-items:center;justify-content:center;z-index:2000;box-shadow:none;margin:0;border-radius:0;padding:0;">
+    <div class="welcome-box">
+      <h1 class="welcome-title">👋 ¡Hola amiguito!</h1>
+      <p class="welcome-sub">Toca los animalitos para jugar con ellos 🎈</p>
+      <div class="welcome-animals">
+        <div class="w-animal" onclick="tapAnimal(this)">🐶</div>
+        <div class="w-animal" onclick="tapAnimal(this)">🐱</div>
+        <div class="w-animal" onclick="tapAnimal(this)">🦁</div>
+        <div class="w-animal" onclick="tapAnimal(this)">🐘</div>
+      </div>
+      <button class="btnBig green welcome-start" onclick="startFromWelcome()">🎮 ¡VAMOS A JUGAR!</button>
+      <p class="welcome-hint">💡 Toca cualquier animalito. ¡Diviértete!</p>
+    </div>
+  </div>
+
+  <!-- PANTALLA 0: Edad -->
+  <div id="s0" class="scr">
+    <p style="text-align:center;font-size:1.3rem;color:#2c3e50;margin:18px 0;font-weight:bold;">👶 ¿Cuántos años tienes?</p>
+    <div class="ageRow">
+      <button class="ageBtn" onclick="selAge(3)">3<small>años</small></button>
+      <button class="ageBtn" onclick="selAge(4)">4<small>años</small></button>
+      <button class="ageBtn" onclick="selAge(5)">5<small>años</small></button>
+    </div>
+    <button class="btnBig purple" onclick="goLvl()" id="btnCont" style="display:none;">🎮 ¡EMPEZAR!</button>
+    <div class="tipBox" style="margin-top:20px;">
+      <h3>🎮 ¡Juego 100% Visual!</h3>
+      <p>🦁 Toca los animales, arrastra sílabas, cuenta y aprende.<br>✨ Animaciones y confeti incluidos.</p>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:14px;">
+      <button class="btnBig pink" onclick="goParent()" style="flex:1;min-width:145px;">👨‍👩‍👧 Papás</button>
+      <button class="btnBig blue" onclick="showHelp()" style="flex:1;min-width:145px;">❓ Ayuda</button>
+    </div>
+  </div>
+
+  <!-- PANTALLA 1: Niveles -->
+  <div id="s1" class="scr">
+    <p style="text-align:center;font-size:1.3rem;color:#2c3e50;margin:14px 0;font-weight:bold;">🌟 Elige tu aventura</p>
+    <p style="text-align:center;color:#6c757d;margin-bottom:16px;font-weight:bold;" id="lblAge"></p>
+    <div class="tipBox" id="ageTip" style="margin-bottom:14px;"></div>
+    <div class="lvlGrid" id="lvlGrid"></div>
+    <button class="btnBig orange" onclick="goS(0)" style="margin-top:12px;">🏠 Menú Principal</button>
+  </div>
+
+  <!-- PANTALLA 2: Juego -->
+  <div id="s2" class="scr">
+    <div class="gHdr">
+      <div class="stRow" id="stRow">
+        <span class="st">⭐</span><span class="st">⭐</span><span class="st">⭐</span><span class="st">⭐</span><span class="st">⭐</span>
+      </div>
+      <div class="prog" id="prog">1/5</div>
+    </div>
+    <div class="bigAnimal" id="anim">🦁</div>
+    <div class="wordDisplay" id="wordDisplay">LEÓN</div>
+    <div class="hint" id="hint">¿Con qué letra empieza?</div>
+    <div class="sylArea" id="sylArea" style="display:none;"></div>
+    <div class="cntArea" id="cntArea" style="display:none;"></div>
+    <div class="optGrid" id="optGrid"></div>
+    <div class="fb" id="fb"></div>
+    <div class="ctrls">
+      <button class="cBtn nxt" id="nxtBtn" onclick="nxtQ()" style="display:none;">➡️ Siguiente</button>
+    </div>
+    <button class="btnBig green" onclick="goLvl()" style="margin-top:10px;">🌟 Cambiar Nivel</button>
+  </div>
+
+  <!-- PANTALLA 3: Recompensa -->
+  <div id="s3" class="scr rew">
+    <div class="emoji" id="rewEmoji">🎉🏆✨</div>
+    <h2>¡FELICIDADES, CAMPEÓN/A! 🌟</h2>
+    <p>Completaste: <strong id="rewLvl" style="color:#667eea;"></strong></p>
+    <div class="sts" id="rewStars">⭐⭐⭐⭐⭐</div>
+    <p id="rewMsg">¡Has desbloqueado un nuevo amigo!</p>
+    <div style="font-size:4rem;margin:18px 0;" id="unlockedAnimal">🦄</div>
+    <div style="margin:22px 0;">
+      <button class="btnBig purple" onclick="playAgn()">🔄 Jugar de nuevo</button>
+      <button class="btnBig green" onclick="goLvl()" style="margin-top:12px;">🌟 Otro nivel</button>
+      <button class="btnBig pink" onclick="goS(0)" style="margin-top:12px;">🏠 Menú</button>
+    </div>
+  </div>
+
+  <!-- PANTALLA 4: Padres -->
+  <div id="s4" class="scr">
+    <p style="text-align:center;font-size:1.3rem;color:#2c3e50;margin:14px 0;font-weight:bold;">👨‍👩‍👧 Panel de Papás</p>
+    <div class="stats">
+      <div class="stCard"><div class="v" id="pStars">0</div><div class="l">⭐ Estrellas</div></div>
+      <div class="stCard"><div class="v" id="pLvl">0</div><div class="l">🎮 Niveles</div></div>
+      <div class="stCard"><div class="v" id="pAge">-</div><div class="l">👶 Edad</div></div>
+      <div class="stCard"><div class="v" id="pMode">👁️</div><div class="l">Modo</div></div>
+    </div>
+    <div class="tipBox">
+      <h3>🎮 Juego Silencioso</h3>
+      <ul>
+        <li>✅ Interactividad visual completa</li>
+        <li>✅ Animaciones y confeti activos</li>
+        <li>✅ Sin sonidos ni voz</li>
+        <li>✅ Ideal para aulas o entornos tranquilos</li>
+      </ul>
+    </div>
+    <div class="tipBox">
+      <h3>📚 Aprendizaje por Edad</h3>
+      <ul>
+        <li><b>👶 3 años:</b> Reconocimiento visual + letras</li>
+        <li><b>🧒 4 años:</b> Vocales, consonantes, sílabas</li>
+        <li><b>🧒 5 años:</b> Palabras, números, desafíos</li>
+      </ul>
+    </div>
+    <button class="btnBig orange" onclick="if(confirm('¿Reiniciar TODO el progreso?')){localStorage.clear();location.reload();}" style="margin-top:14px;">🗑️ Reiniciar Progreso</button>
+    <button class="btnBig blue" onclick="goS(0)" style="margin-top:12px;">✅ Volver al Juego</button>
+  </div>
+
+  <footer>Hecho con ❤️ • 🎮 100% Visual • 📱 Sin anuncios • 🌐 Funciona offline</footer>
+</div>
+
+<script>
+// ========== CONFIGURACIÓN ==========
+let age = 4;
+let curLvl = 1, curQ = 0, stars = 0, ansDone = false;
+let sylPlaced = [], sylCorrect = [];
+
+function save(k,v){ try{localStorage.setItem('aa_'+k,JSON.stringify(v))}catch(e){} }
+function load(k){ try{return JSON.parse(localStorage.getItem('aa_'+k))}catch(e){return null} }
+let totStars = load('stars')||0, doneLvls = load('done')||[], savedAge = load('age')||4;
+
+// ========== BASE DE DATOS POR EDAD ==========
+const DB_BY_AGE = {
+  3: {
+    levels: [
+      {id:1, nm:"🐾 Animales", icon:"🐾", desc:"Reconoce y aprende", unlocked:true},
+      {id:2, nm:"🔤 Vocales", icon:"🅰️", desc:"A E I O U", unlocked:true},
+      {id:3, nm:"🎨 Colores", icon:"🌈", desc:"Rojo, azul...", unlocked:false},
+      {id:4, nm:"🔢 1-2-3", icon:"1️⃣", desc:"Contar", unlocked:false},
+      {id:5, nm:"🔄 Repaso", icon:"✨", desc:"¡Todo junto!", unlocked:false}
+    ],
+    questions: {
+      1: [
+        {a:"🐶", w:"PERRO", t:"P", hint:"¡Guau guau!"},
+        {a:"🐱", w:"GATO", t:"G", hint:"¡Miau miau!"},
+        {a:"🦁", w:"LEÓN", t:"L", hint:"¡Rugido!"},
+        {a:"🐘", w:"ELEFANTE", t:"E", hint:"¡Barrito!"},
+        {a:"🐸", w:"RANA", t:"R", hint:"¡Croac!"}
+      ],
+      2: [
+        {a:"🐝", w:"ABEJA", t:"A", hint:"Empieza con A"},
+        {a:"🐘", w:"ELEFANTE", t:"E", hint:"Empieza con E"},
+        {a:"🦎", w:"IGUANA", t:"I", hint:"Empieza con I"},
+        {a:"🐙", w:"PULPO", t:"O", hint:"Empieza con O"},
+        {a:"🦊", w:"ZORRO", t:"U", hint:"Suena U en ZORRO"}
+      ]
+    }
+  },
+  4: {
+    levels: [
+      {id:1, nm:"🔤 Vocales", icon:"🅰️", desc:"A E I O U", unlocked:true},
+      {id:2, nm:"🔠 Consonantes", icon:"🅱️", desc:"B C D M P", unlocked:true},
+      {id:3, nm:"🔤 Sílabas", icon:"🧩", desc:"MA-RI-PO-SA", unlocked:true},
+      {id:4, nm:"📝 Palabras", icon:"📖", desc:"GATO, PERRO", unlocked:false},
+      {id:5, nm:"🔢 1-5", icon:"🔢", desc:"Contar hasta 5", unlocked:false},
+      {id:6, nm:"🔄 Repaso", icon:"✨", desc:"¡Mezclado!", unlocked:false}
+    ],
+    questions: {
+      1: [
+        {a:"🐝", w:"ABEJA", t:"A", hint:"¿Con qué letra empieza ABEJA?"},
+        {a:"🐘", w:"ELEFANTE", t:"E", hint:"¿Con qué letra empieza ELEFANTE?"},
+        {a:"🦎", w:"IGUANA", t:"I", hint:"¿Con qué letra empieza IGUANA?"},
+        {a:"🐙", w:"PULPO", t:"O", hint:"¿Con qué letra empieza PULPO?"},
+        {a:"🦊", w:"ZORRO", t:"U", hint:"¿Qué vocal suena en ZORRO?"}
+      ],
+      2: [
+        {a:"🐴", w:"BURRO", t:"B", hint:"¿Con qué letra empieza BURRO?"},
+        {a:"🐈", w:"GATO", t:"G", hint:"¿Con qué letra empieza GATO?"},
+        {a:"🐭", w:"RATÓN", t:"R", hint:"¿Con qué letra empieza RATÓN?"},
+        {a:"🐷", w:"CERDO", t:"C", hint:"¿Con qué letra empieza CERDO?"},
+        {a:"🐶", w:"PERRO", t:"P", hint:"¿Con qué letra empieza PERRO?"}
+      ],
+      3: [
+        {a:"🦋", w:"MARIPOSA", syllables:["MA","RI","PO","SA"], hint:"Ordena: MA - RI - PO - SA"},
+        {a:"🐸", w:"RANA", syllables:["RA","NA"], hint:"Ordena: RA - NA"},
+        {a:"🐦", w:"PÁJARO", syllables:["PÁ","JA","RO"], hint:"Ordena: PÁ - JA - RO"},
+        {a:"🐟", w:"PEZ", syllables:["PEZ"], hint:"¿Cuál es la sílaba?"},
+        {a:"🦆", w:"PATO", syllables:["PA","TO"], hint:"Ordena: PA - TO"}
+      ]
+    }
+  },
+  5: {
+    levels: [
+      {id:1, nm:"🔤 Todas", icon:"🔤", desc:"A-Z con animales", unlocked:true},
+      {id:2, nm:"📝 Palabras", icon:"📖", desc:"GATO, LEÓN...", unlocked:true},
+      {id:3, nm:"🔤 Sílabas", icon:"🧩", desc:"CO-NE-JO...", unlocked:true},
+      {id:4, nm:"🔢 1-10", icon:"🔟", desc:"Contar hasta 10", unlocked:true},
+      {id:5, nm:"🧠 Adivina", icon:"❓", desc:"¿Qué animal soy?", unlocked:true},
+      {id:6, nm:"🏆 Desafío", icon:"⭐", desc:"¡Todo mezclado!", unlocked:true}
+    ],
+    questions: {
+      1: [
+        {a:"🦁", w:"LEÓN", t:"L", hint:"¿Qué letra hace el sonido inicial?"},
+        {a:"🐼", w:"PANDA", t:"P", hint:"¿Con qué letra empieza PANDA?"},
+        {a:"🐨", w:"KOALA", t:"K", hint:"¿Qué letra es poco común?"},
+        {a:"🦜", w:"LORO", t:"L", hint:"¿Qué animal dice 'Loro'?"},
+        {a:"🐧", w:"PINGÜINO", t:"P", hint:"¿Con qué letra empieza?"}
+      ],
+      2: [
+        {a:"🐱", w:"GATO", hint:"GA - TO", options:["GATO","GATA","GOTE"], correct:0},
+        {a:"🐶", w:"PERRO", hint:"PE - RRO", options:["PERRO","PERA","PETO"], correct:0},
+        {a:"🐰", w:"CONEJO", hint:"CO - NE - JO", options:["CONEJO","CONEJA","CONECO"], correct:0},
+        {a:"🦁", w:"LEÓN", hint:"LE - ÓN", options:["LEÓN","LIÓN","LUÓN"], correct:0},
+        {a:"🐼", w:"PANDA", hint:"PAN - DA", options:["PANDA","PANDO","PENDE"], correct:0}
+      ],
+      3: [
+        {a:"🐰", w:"CONEJO", syllables:["CO","NE","JO"], hint:"Arma: CO-NE-JO"},
+        {a:"🦋", w:"MARIPOSA", syllables:["MA","RI","PO","SA"], hint:"Arma: MA-RI-PO-SA"},
+        {a:"🐘", w:"ELEFANTE", syllables:["E","LE","FAN","TE"], hint:"Arma: E-LE-FAN-TE"},
+        {a:"🦜", w:"LORO", syllables:["LO","RO"], hint:"Arma: LO-RO"},
+        {a:"🐧", w:"PINGÜINO", syllables:["PIN","GÜI","NO"], hint:"Arma: PIN-GÜI-NO"}
+      ],
+      4: [
+        {a:"🐥", n:1, w:"Un pollito", options:["1","2","3"], correct:0, special:"✨ ¡El 1!"},
+        {a:"🐤🐤", n:2, w:"Dos pollitos", options:["1","2","3"], correct:1},
+        {a:"🐣🐣🐣", n:3, w:"¡Tres pollitos!", options:["2","3","4"], correct:1, special:"✨ ¡El 3!"},
+        {a:"🐰🐰🐰🐰", n:4, w:"¡Cuatro conejos!", options:["3","4","5"], correct:1, special:"🌟 ¡El 4!"},
+        {a:"🐸🐸🐸🐸🐸", n:5, w:"Cinco ranitas", options:["4","5","6"], correct:1}
+      ]
+    }
+  }
+};
+
+const REWARDS = ["🦄","🦋","🐬","🦜","🐨","🦊","🐼","🐧","🦩","🐙","🦁","🐯"];
+
+// ========== INICIALIZACIÓN ==========
+window.onload = function() {
+  age = savedAge;
+  updateAgeButtons();
+  updateParentPanel();
+};
+
+// ========== NAVEGACIÓN ==========
+function goS(id) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('active'));
+  document.getElementById('s'+id).classList.add('active');
+  if(id === 1) renderLevels();
+  if(id === 4) updateParentPanel();
+}
+
+function selAge(a) {
+  age = a; save('age', age);
+  updateAgeButtons();
+  document.getElementById('btnCont').style.display = 'flex';
+  document.querySelectorAll('.ageBtn').forEach(btn => btn.classList.remove('sel'));
+  event.currentTarget.classList.add('sel');
+}
+
+function updateAgeButtons() {
+  document.querySelectorAll('.ageBtn').forEach(btn => {
+    btn.classList.toggle('sel', parseInt(btn.textContent) === age);
+  });
+}
+
+function goLvl() {
+  document.getElementById('lblAge').textContent = `👶 Nivel para ${age} años`;
+  const tips = {
+    3: "💡 <b>Para 3 años:</b> Enfócate en reconocimiento visual. ¡Deja que exploren!",
+    4: "💡 <b>Para 4 años:</b> Practica letras y sílabas. ¡Celebra cada intento!",
+    5: "💡 <b>Para 5 años:</b> Desafía con palabras y números. ¡Anima a leer en voz alta!"
+  };
+  document.getElementById('ageTip').innerHTML = tips[age] || tips[4];
+  goS(1);
+}
+
+function goParent() { updateParentPanel(); goS(4); }
+function showHelp() {
+  alert("🦁 Aventuras con Animalitos\n\n🎮 Cómo jugar:\n1. Elige tu edad (3, 4 o 5 años)\n2. Selecciona un nivel\n3. Toca al animal y responde la pregunta\n4. ¡Gana estrellas y desbloquea premios! ⭐\n\n👨‍👩‍👧 Panel de papás: Ve progreso y reinicia si es necesario.\n\n✅ Sin sonidos ✅ 100% Visual ✅ Interactivo");
+}
+
+// ========== NIVELES ==========
+function renderLevels() {
+  const grid = document.getElementById('lvlGrid'); grid.innerHTML = '';
+  const levels = DB_BY_AGE[age].levels;
+  levels.forEach((lvl, idx) => {
+    const locked = !lvl.unlocked && idx > 0 && !levels[idx-1].unlocked;
+    const card = document.createElement('div');
+    card.className = `lvlCard ${locked?'locked':''}`;
+    card.innerHTML = `<span class="e">${lvl.icon}</span>${lvl.nm}<small>${lvl.desc}</small>${!lvl.unlocked?'<br><small style="color:#e74c3c">🔒</small>':''}`;
+    if(!locked) card.onclick = () => startLvl(lvl.id);
+    grid.appendChild(card);
+  });
+}
+
+function startLvl(lvlId) {
+  curLvl = lvlId; curQ = 0; stars = 0; ansDone = false; sylPlaced = [];
+  if(!doneLvls.includes(`${age}-${lvlId}`)) {
+    doneLvls.push(`${age}-${lvlId}`); save('done', doneLvls);
+  }
+  updateStars(); loadQuestion(); goS(2);
+}
+
+// ========== PREGUNTAS ==========
+function loadQuestion() {
+  const db = DB_BY_AGE[age];
+  const qs = db.questions[curLvl] || [];
+  if(curQ >= qs.length) { showReward(); return; }
+  
+  const q = qs[curQ]; ansDone = false;
+  document.getElementById('nxtBtn').style.display = 'none';
+  document.getElementById('fb').innerHTML = '';
+  document.getElementById('hint').textContent = q.hint || '';
+  document.getElementById('prog').textContent = `${curQ+1}/${qs.length}`;
+  
+  document.getElementById('anim').textContent = q.a;
+  document.getElementById('anim').className = 'bigAnimal';
+  document.getElementById('wordDisplay').textContent = q.w || '';
+  document.getElementById('wordDisplay').style.display = q.w ? 'flex' : 'none';
+  
+  document.getElementById('sylArea').style.display = 'none';
+  document.getElementById('cntArea').style.display = 'none';
+  document.getElementById('optGrid').className = 'optGrid';
+  document.getElementById('optGrid').innerHTML = '';
+  
+  if(q.syllables) renderSyllableMode(q);
+  else if(q.n) renderNumberMode(q);
+  else if(q.options) renderWordMode(q);
+  else renderLetterMode(q);
+}
+
+function renderLetterMode(q) {
+  const optGrid = document.getElementById('optGrid'); optGrid.classList.add('g3');
+  const letters = ['A','E','I','O','U','B','C','D','G','L','M','P','R','T'];
+  let opts = [q.t];
+  while(opts.length < 3) {
+    const r = letters[Math.floor(Math.random()*letters.length)];
+    if(!opts.includes(r)) opts.push(r);
+  }
+  opts.sort(() => Math.random() - 0.5);
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'optBtn'; btn.textContent = opt;
+    btn.onclick = () => checkAnswer(opt === q.t, btn);
+    optGrid.appendChild(btn);
+  });
+}
+
+function renderWordMode(q) {
+  const optGrid = document.getElementById('optGrid');
+  optGrid.classList.add(q.options.length > 2 ? 'g3' : 'g2');
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'optBtn'; btn.textContent = opt;
+    btn.onclick = () => checkAnswer(idx === q.correct, btn);
+    optGrid.appendChild(btn);
+  });
+}
+
+function renderSyllableMode(q) {
+  document.getElementById('sylArea').style.display = 'flex';
+  const area = document.getElementById('sylArea'); area.innerHTML = '';
+  sylPlaced = []; sylCorrect = [...q.syllables];
+  let avail = [...q.syllables];
+  if(avail.length < 4) {
+    const dist = ['LA','ME','TI','SO','PA','RE'];
+    while(avail.length < 4) { const d = dist[Math.floor(Math.random()*dist.length)]; if(!avail.includes(d)) avail.push(d); }
+  }
+  avail.sort(() => Math.random() - 0.5);
+  avail.forEach(syl => {
+    const btn = document.createElement('button');
+    btn.className = 'sylBtn'; btn.textContent = syl; btn.dataset.syl = syl;
+    btn.onclick = () => placeSyllable(syl, btn, q);
+    area.appendChild(btn);
+  });
+  const optGrid = document.getElementById('optGrid');
+  optGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;font-weight:bold;color:#6c757d;">👆 Toca en orden</div>';
+  optGrid.classList.remove('g2','g3');
+}
+
+function placeSyllable(syl, btn, q) {
+  if(btn.classList.contains('used')) return;
+  btn.classList.add('used'); sylPlaced.push(syl);
+  const placed = document.createElement('span'); placed.className = 'sylDone'; placed.textContent = syl;
+  document.getElementById('sylArea').appendChild(placed);
+  if(sylPlaced.length === q.syllables.length) {
+    checkAnswer(sylPlaced.join('') === q.syllables.join(''), null, true);
+  }
+}
+
+function renderNumberMode(q) {
+  document.getElementById('cntArea').style.display = 'flex';
+  const area = document.getElementById('cntArea'); area.innerHTML = '';
+  for(let i=0; i<q.n; i++) {
+    const item = document.createElement('span'); item.className = 'cntItem';
+    item.textContent = q.a.split('')[0] || '🐾';
+    item.onclick = () => { item.style.transform='scale(1.3)'; setTimeout(()=>item.style.transform='',200); };
+    area.appendChild(item);
+  }
+  const optGrid = document.getElementById('optGrid'); optGrid.classList.add('g3'); optGrid.innerHTML = '';
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button'); btn.className = 'optBtn'; btn.textContent = opt;
+    btn.onclick = () => checkAnswer(idx === q.correct, btn);
+    optGrid.appendChild(btn);
+  });
+}
+
+// ========== RESPUESTAS ==========
+function checkAnswer(ok, btn, isSyl=false) {
+  if(ansDone) return; ansDone = true;
+  const fb = document.getElementById('fb');
+  if(ok) {
+    stars++; updateStars();
+    fb.textContent = '¡MUY BIEN! 🎉 ' + (isSyl?'¡Palabra completa!':'¡Correcto!');
+    fb.className = 'fb ok';
+    if(btn) { btn.classList.add('ok'); btn.disabled=true; }
+    createConfetti(18);
+  } else {
+    fb.textContent = '¡Casi! Intenta de nuevo 💪';
+    fb.className = 'fb no';
+    if(btn) { btn.classList.add('no'); btn.disabled=true; }
+    const anim = document.getElementById('anim'); anim.style.animation = 'shake .35s';
+    setTimeout(()=>anim.style.animation='floatAnimal 2.8s ease-in-out infinite',350);
+  }
+  document.getElementById('nxtBtn').style.display = 'flex';
+}
+
+function updateStars() {
+  const row = document.getElementById('stRow'); row.innerHTML = '';
+  for(let i=0;i<5;i++) {
+    const st = document.createElement('span'); st.className = `st ${i<stars?'on':''}`; st.textContent='⭐';
+    row.appendChild(st);
+  }
+}
+
+function nxtQ() { curQ++; loadQuestion(); }
+
+// ========== EFECTOS VISUALES ==========
+function createConfetti(n=30) {
+  const colors = ['#ff6b6b','#4ecdc4','#ffe66d','#95e1d3','#f38181','#aa96da'];
+  for(let i=0;i<n;i++) {
+    setTimeout(()=>{
+      const c = document.createElement('div'); c.className='confetti';
+      c.style.left = Math.random()*100+'vw';
+      c.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+      c.style.animationDuration = (2.2+Math.random()*2)+'s';
+      document.body.appendChild(c);
+      setTimeout(()=>c.remove(), 3200);
+    }, i*45);
+  }
+}
+
+// ========== RECOMPENSA ==========
+function showReward() {
+  totStars += stars; save('stars', totStars);
+  const unlock = REWARDS[Math.floor(Math.random()*REWARDS.length)];
+  document.getElementById('rewLvl').textContent = DB_BY_AGE[age].levels.find(l=>l.id===curLvl)?.nm || 'Nivel';
+  document.getElementById('rewStars').textContent = '⭐'.repeat(stars) + '⭐'.repeat(5-stars);
+  document.getElementById('rewMsg').textContent = stars>=4?'¡Excelente! Desbloqueaste:':'¡Bien hecho! Desbloqueaste:';
+  document.getElementById('unlockedAnimal').textContent = unlock;
+  if(stars===5) createConfetti(55);
+  goS(3);
+}
+
+function playAgn() { curQ=0; stars=0; sylPlaced=[]; loadQuestion(); goS(2); }
+
+// ========== PANEL PADRES ==========
+function updateParentPanel() {
+  document.getElementById('pStars').textContent = totStars;
+  document.getElementById('pLvl').textContent = doneLvls.length;
+  document.getElementById('pAge').textContent = age+' años';
+  document.getElementById('pMode').textContent = '👁️';
+}
+
+// ========== BIENVENIDA INTERACTIVA (VISUAL) ==========
+function tapAnimal(el) {
+  if(el.classList.contains('pop')) return;
+  el.classList.add('pop');
+  setTimeout(()=>el.classList.remove('pop'), 450);
+  spawnParticles(el);
+}
+
+function spawnParticles(target) {
+  const rect = target.getBoundingClientRect();
+  const cx = rect.left + rect.width/2;
+  const cy = rect.top + rect.height/2;
+  const colors = ['#ff6b6b','#4ecdc4','#ffe66d','#95e1d3','#f38181','#aa96da','#ffb347'];
+  for(let i=0; i<14; i++) {
+    const p = document.createElement('div'); p.className = 'w-particle';
+    p.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+    p.style.left = cx + 'px'; p.style.top = cy + 'px';
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 70 + Math.random() * 100;
+    p.style.setProperty('--tx', Math.cos(angle)*dist + 'px');
+    p.style.setProperty('--ty', Math.sin(angle)*dist + 'px');
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 750);
+  }
+}
+
+function startFromWelcome() {
+  const w = document.getElementById('s-welcome');
+  w.style.opacity = '0'; w.style.transform = 'scale(1.08)';
+  w.style.transition = 'all .5s cubic-bezier(0.4, 0, 0.2, 1)';
+  setTimeout(()=>{ w.classList.remove('active'); w.style.display='none'; goS(0); }, 500);
+}
+
+if(savedAge) {
+  age = savedAge;
+  document.querySelectorAll('.ageBtn').forEach(btn => {
+    if(parseInt(btn.textContent) === age) btn.classList.add('sel');
+  });
+}
+</script>
+</body>
+</html>
