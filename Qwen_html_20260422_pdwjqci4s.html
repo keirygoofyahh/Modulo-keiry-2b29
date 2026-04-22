@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐾 Sílabas y Animales - Juego para Niños</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&family=Nunito:wght@400;700;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Nunito', sans-serif; overflow-x: hidden; min-height: 100vh; background: #1a1a2e; }
+
+        .bg-animated { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; }
+        .bg-animated .bubble { position: absolute; border-radius: 50%; opacity: 0.15; animation: floatBubble linear infinite; }
+        @keyframes floatBubble {
+            0% { transform: translateY(100vh) rotate(0deg) scale(0.5); opacity: 0; }
+            10% { opacity: 0.15; }
+            90% { opacity: 0.15; }
+            100% { transform: translateY(-20vh) rotate(720deg) scale(1); opacity: 0; }
+        }
+
+        .screen { display: none; position: relative; z-index: 10; min-height: 100vh; justify-content: center; align-items: center; padding: 20px; }
+        .screen.active { display: flex; }
+
+        .welcome-container, .age-container, .game-container, .results-container { text-align: center; max-width: 600px; width: 100%; }
+        
+        .welcome-title { font-family: 'Bubblegum Sans', cursive; font-size: clamp(2.5rem, 7vw, 4.5rem); color: #fff; text-shadow: 3px 3px 0 #ff6b6b, 6px 6px 0 rgba(0,0,0,0.1); margin-bottom: 10px; animation: bounceTitle 2s ease-in-out infinite; }
+        @keyframes bounceTitle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        .welcome-subtitle { font-size: clamp(1rem, 3vw, 1.5rem); color: #ffd93d; margin-bottom: 30px; font-weight: 700; }
+        .welcome-animals { font-size: clamp(3rem, 10vw, 5rem); margin: 20px 0; animation: wiggle 1.5s ease-in-out infinite; }
+        @keyframes wiggle { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+        .welcome-animals span { display: inline-block; margin: 0 8px; animation: popIn 0.5s ease-out backwards; }
+        .welcome-animals span:nth-child(2) { animation-delay: 0.15s; }
+        .welcome-animals span:nth-child(3) { animation-delay: 0.3s; }
+        .welcome-animals span:nth-child(4) { animation-delay: 0.45s; }
+        .welcome-animals span:nth-child(5) { animation-delay: 0.6s; }
+        @keyframes popIn { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+
+        .btn { display: inline-block; padding: 18px 50px; font-family: 'Bubblegum Sans', cursive; font-size: clamp(1.3rem, 4vw, 1.8rem); border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; text-decoration: none; position: relative; overflow: hidden; }
+        .btn-primary { background: linear-gradient(135deg, #ff6b6b, #ff8e53); color: white; box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4); }
+        .btn-primary:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 12px 35px rgba(255, 107, 107, 0.5); }
+        .btn-primary:active { transform: translateY(0) scale(0.98); }
+        .btn-secondary { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; box-shadow: 0 8px 25px rgba(108, 92, 231, 0.4); }
+        .btn-secondary:hover { transform: translateY(-3px) scale(1.05); }
+        .btn-success { background: linear-gradient(135deg, #00b894, #55efc4); color: white; box-shadow: 0 8px 25px rgba(0, 184, 148, 0.4); }
+        .btn-success:hover { transform: translateY(-3px) scale(1.05); }
+
+        .age-title { font-family: 'Bubblegum Sans', cursive; font-size: clamp(1.8rem, 5vw, 3rem); color: #fff; margin-bottom: 10px; }
+        .age-question { font-size: clamp(1.1rem, 3vw, 1.5rem); color: #ffd93d; margin-bottom: 30px; font-weight: 700; }
+        .age-buttons { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; }
+        .age-btn { width: 100px; height: 100px; border-radius: 25px; border: 4px solid transparent; font-family: 'Bubblegum Sans', cursive; font-size: 2.5rem; color: white; cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .age-btn .age-label { font-size: 0.7rem; font-family: 'Nunito', sans-serif; font-weight: 700; margin-top: 2px; }
+        .age-btn:nth-child(1) { background: linear-gradient(135deg, #fd79a8, #e84393); }
+        .age-btn:nth-child(2) { background: linear-gradient(135deg, #fdcb6e, #f39c12); }
+        .age-btn:nth-child(3) { background: linear-gradient(135deg, #55efc4, #00b894); }
+        .age-btn:nth-child(4) { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+        .age-btn:hover { transform: translateY(-8px) scale(1.1); box-shadow: 0 15px 30px rgba(0,0,0,0.3); }
+        .age-btn.selected { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 0 4px rgba(255,255,255,0.3), 0 15px 30px rgba(0,0,0,0.3); }
+
+        .level-info { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 20px; padding: 20px; margin-top: 20px; color: #fff; min-height: 80px; transition: all 0.3s ease; }
+        .level-info h3 { font-family: 'Bubblegum Sans', cursive; font-size: 1.3rem; color: #ffd93d; margin-bottom: 5px; }
+        .level-info p { font-size: 0.95rem; color: #ddd; }
+
+        .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px 25px; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 20px; }
+        .game-score { color: #ffd93d; font-weight: 900; font-size: 1.3rem; }
+        .game-progress { color: #fff; font-weight: 700; font-size: 1.1rem; }
+        .game-level-badge { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; padding: 5px 15px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; }
+        .progress-bar-container { width: 100%; height: 12px; background: rgba(255,255,255,0.15); border-radius: 10px; margin-bottom: 25px; overflow: hidden; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #00b894, #55efc4, #ffd93d); border-radius: 10px; transition: width 0.5s ease; }
+
+        .question-card { background: rgba(255,255,255,0.12); backdrop-filter: blur(15px); border-radius: 30px; padding: 35px 25px; margin-bottom: 25px; border: 2px solid rgba(255,255,255,0.1); }
+        .question-type { display: inline-block; background: rgba(255, 217, 61, 0.2); color: #ffd93d; padding: 5px 15px; border-radius: 15px; font-size: 0.85rem; font-weight: 700; margin-bottom: 15px; }
+        .question-emoji { font-size: clamp(4rem, 15vw, 7rem); margin: 10px 0; animation: bounceEmoji 1s ease-in-out infinite; }
+        @keyframes bounceEmoji { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .question-text { font-family: 'Bubblegum Sans', cursive; font-size: clamp(1.3rem, 4vw, 1.8rem); color: #fff; margin: 15px 0; line-height: 1.4; }
+        .syllable-display { display: flex; justify-content: center; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
+        .syllable-box { background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; padding: 12px 22px; border-radius: 15px; font-family: 'Bubblegum Sans', cursive; font-size: clamp(1.5rem, 5vw, 2.2rem); box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3); }
+        .syllable-box.empty { background: rgba(255,255,255,0.1); border: 3px dashed rgba(255,255,255,0.3); color: transparent; min-width: 70px; }
+
+        .options-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
+        .options-grid.three-cols { grid-template-columns: repeat(3, 1fr); }
+        .option-btn { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 3px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 20px 15px; cursor: pointer; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+        .option-btn:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.18); }
+        .option-btn .option-emoji { font-size: clamp(2rem, 8vw, 3.5rem); }
+        .option-btn .option-text { font-family: 'Bubblegum Sans', cursive; font-size: clamp(1rem, 3vw, 1.4rem); color: #fff; }
+        .option-btn.correct { background: rgba(0, 184, 148, 0.4); border-color: #00b894; animation: correctPulse 0.5s ease; }
+        .option-btn.wrong { background: rgba(255, 107, 107, 0.4); border-color: #ff6b6b; animation: wrongShake 0.5s ease; }
+        @keyframes correctPulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+        @keyframes wrongShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+        .feedback-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; justify-content: center; align-items: center; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); }
+        .feedback-overlay.active { display: flex; }
+        .feedback-content { text-align: center; animation: popIn 0.4s ease; }
+        .feedback-emoji { font-size: 5rem; animation: bounceEmoji 0.6s ease-in-out infinite; }
+        .feedback-text { font-family: 'Bubblegum Sans', cursive; font-size: 2rem; color: #fff; margin-top: 10px; }
+
+        .results-trophy { font-size: clamp(4rem, 15vw, 7rem); animation: bounceTitle 1.5s ease-in-out infinite; }
+        .results-title { font-family: 'Bubblegum Sans', cursive; font-size: clamp(2rem, 6vw, 3rem); color: #ffd93d; margin: 15px 0; }
+        .results-score { font-size: clamp(1.2rem, 4vw, 1.8rem); color: #fff; margin-bottom: 10px; }
+        .results-stars { font-size: clamp(2rem, 8vw, 3.5rem); margin: 15px 0; }
+        .results-stars .star { display: inline-block; animation: starPop 0.5s ease backwards; }
+        .results-stars .star:nth-child(2) { animation-delay: 0.2s; }
+        .results-stars .star:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes starPop { 0% { transform: scale(0) rotate(-180deg); opacity: 0; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        .results-message { font-size: 1.1rem; color: #ddd; margin-bottom: 30px; font-weight: 700; }
+        .results-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+
+        .name-input { background: rgba(255,255,255,0.15); border: 3px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 15px 25px; font-family: 'Bubblegum Sans', cursive; font-size: 1.3rem; color: #fff; text-align: center; width: 100%; max-width: 300px; margin: 15px auto; display: block; outline: none; transition: all 0.3s ease; }
+        .name-input:focus { border-color: #ffd93d; background: rgba(255,255,255,0.2); }
+        .name-input::placeholder { color: rgba(255,255,255,0.4); }
+
+        .instructions { background: rgba(255,255,255,0.08); border-radius: 20px; padding: 20px; margin: 20px 0; color: #ddd; font-size: 1rem; }
+        .instructions h3 { color: #ffd93d; font-family: 'Bubblegum Sans', cursive; margin-bottom: 10px; font-size: 1.2rem; }
+        .instructions ul { list-style: none; text-align: left; }
+        .instructions li { padding: 5px 0; }
+        .instructions li::before { content: '🐾 '; }
+
+        .syllable-options { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+        .syllable-option-btn { background: linear-gradient(135deg, #fdcb6e, #f39c12); color: #fff; border: 3px solid rgba(255,255,255,0.2); border-radius: 15px; padding: 15px 25px; font-family: 'Bubblegum Sans', cursive; font-size: clamp(1.3rem, 4vw, 1.8rem); cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3); }
+        .syllable-option-btn:hover { transform: translateY(-5px) scale(1.05); }
+        .syllable-option-btn.correct { background: linear-gradient(135deg, #00b894, #55efc4); box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4); }
+        .syllable-option-btn.wrong { background: linear-gradient(135deg, #ff6b6b, #ee5a24); box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4); }
+        .formed-word { display: flex; justify-content: center; gap: 8px; margin: 15px 0; min-height: 60px; }
+        .formed-syllable { background: linear-gradient(135deg, #00b894, #55efc4); color: white; padding: 10px 18px; border-radius: 12px; font-family: 'Bubblegum Sans', cursive; font-size: 1.5rem; animation: popIn 0.3s ease; }
+
+        .next-btn-container { margin-top: 20px; }
+        .btn-next { background: linear-gradient(135deg, #0984e3, #74b9ff); color: white; box-shadow: 0 8px 25px rgba(9, 132, 227, 0.4); }
+
+        .confetti-piece { position: fixed; z-index: 200; width: 10px; height: 10px; top: -10px; animation: confettiFall linear forwards; }
+        @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+        .slide-in { animation: slideIn 0.5s ease; }
+        @keyframes slideIn { 0% { transform: translateY(30px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        .hidden { display: none !important; }
+
+        @media (max-width: 480px) {
+            .age-btn { width: 80px; height: 80px; font-size: 2rem; border-radius: 20px; }
+            .game-header { flex-wrap: wrap; gap: 8px; justify-content: center; }
+            .options-grid { gap: 10px; }
+            .question-card { padding: 25px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-animated" id="bgAnimated"></div>
+
+    <!-- PANTALLA 1: BIENVENIDA -->
+    <div class="screen active" id="screenWelcome">
+        <div class="welcome-container slide-in">
+            <div class="welcome-animals">
+                <span>🐶</span><span></span><span>🐸</span><span>🐘</span><span></span>
+            </div>
+            <h1 class="welcome-title">Sílabas y Animales</h1>
+            <p class="welcome-subtitle">¡Aprende jugando con los animalitos! 🎉</p>
+            <div class="instructions">
+                <h3>¿Qué haremos?</h3>
+                <ul>
+                    <li>Conocer animales y sus nombres</li>
+                    <li>Aprender sílabas divertidas</li>
+                    <li>Formar palabras con sonidos</li>
+                    <li>¡Ganar estrellas en cada nivel!</li>
+                </ul>
+            </div>
+            <button class="btn btn-primary" onclick="showScreen('screenAge')">¡Vamos a jugar! 🚀</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: EDAD -->
+    <div class="screen" id="screenAge">
+        <div class="age-container slide-in">
+            <div class="welcome-animals" style="font-size: 3rem;"><span>🌟</span><span>🎈</span><span></span></div>
+            <h2 class="age-title">¿Cuántos años tienes?</h2>
+            <p class="age-question">Toca tu edad para comenzar</p>
+            <input type="text" class="name-input" id="childName" placeholder="✏️ Escribe tu nombre" maxlength="15">
+            <div class="age-buttons">
+                <button class="age-btn" onclick="selectAge(2)">2<span class="age-label">años</span></button>
+                <button class="age-btn" onclick="selectAge(3)">3<span class="age-label">años</span></button>
+                <button class="age-btn" onclick="selectAge(4)">4<span class="age-label">años</span></button>
+                <button class="age-btn" onclick="selectAge(5)">5<span class="age-label">años</span></button>
+            </div>
+            <div class="level-info" id="levelInfo"><p>👆 Selecciona tu edad para ver el nivel</p></div>
+            <br>
+            <button class="btn btn-success hidden" id="btnStartGame" onclick="startGame()">¡Empezar! 🎮</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 3: JUEGO -->
+    <div class="screen" id="screenGame">
+        <div class="game-container slide-in">
+            <div class="game-header">
+                <span class="game-level-badge" id="gameLevelBadge">Nivel 2 años</span>
+                <span class="game-progress" id="gameProgress">1 / 10</span>
+                <span class="game-score" id="gameScore">⭐ 0</span>
+            </div>
+            <div class="progress-bar-container"><div class="progress-bar" id="progressBar" style="width: 0%"></div></div>
+            <div class="question-card" id="questionCard"></div>
+            <div id="optionsContainer"></div>
+            <div class="next-btn-container hidden" id="nextBtnContainer">
+                <button class="btn btn-next" onclick="nextQuestion()">Siguiente ➡️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 4: RESULTADOS -->
+    <div class="screen" id="screenResults">
+        <div class="results-container slide-in">
+            <div class="results-trophy" id="resultsTrophy"></div>
+            <h2 class="results-title" id="resultsTitle">¡Increíble!</h2>
+            <p class="results-score" id="resultsScore"></p>
+            <div class="results-stars" id="resultsStars"></div>
+            <p class="results-message" id="resultsMessage"></p>
+            <div class="results-buttons">
+                <button class="btn btn-primary" onclick="restartGame()">Jugar otra vez 🔄</button>
+                <button class="btn btn-secondary" onclick="changeAge()">Cambiar edad 🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK OVERLAY -->
+    <div class="feedback-overlay" id="feedbackOverlay">
+        <div class="feedback-content">
+            <div class="feedback-emoji" id="feedbackEmoji">🎉</div>
+            <div class="feedback-text" id="feedbackText">¡Muy bien!</div>
+        </div>
+    </div>
+
+    <script>
+        // ===== DATOS DEL JUEGO =====
+        const levelDescriptions = {
+            2: { name: "Explorador de Animales", desc: "Reconoce animales por su imagen y sonido. ¡Muy sencillo!", questions: 8, color: "#fd79a8" },
+            3: { name: "Aprendiz de Sílabas", desc: "Une animales con sus nombres de 2 sílabas. ¡Sigue aprendiendo!", questions: 10, color: "#fdcb6e" },
+            4: { name: "Constructor de Palabras", desc: "Forma palabras con sílabas y descubre animales nuevos.", questions: 12, color: "#55efc4" },
+            5: { name: "Maestro de los Animales", desc: "Reto completo: sílabas, palabras completas y clasificación.", questions: 12, color: "#74b9ff" }
+        };
+
+        const animals = {
+            2: [
+                { emoji: "🐶", name: "Perro", syllables: ["Pe", "rro"] }, { emoji: "🐱", name: "Gato", syllables: ["Ga", "to"] },
+                { emoji: "", name: "Rana", syllables: ["Ra", "na"] }, { emoji: "", name: "Pez", syllables: ["Pez"] },
+                { emoji: "", name: "Pájaro", syllables: ["Pá", "ja", "ro"] }, { emoji: "🐷", name: "Cerdo", syllables: ["Cer", "do"] },
+                { emoji: "🐔", name: "Gallina", syllables: ["Ga", "lli", "na"] }, { emoji: "", name: "Vaca", syllables: ["Va", "ca"] },
+                { emoji: "🐴", name: "Caballo", syllables: ["Ca", "ba", "llo"] }, { emoji: "🐑", name: "Oveja", syllables: ["O", "ve", "ja"] },
+                { emoji: "", name: "Elefante", syllables: ["E", "le", "fan", "te"] }, { emoji: "🐰", name: "Conejo", syllables: ["Co", "ne", "jo"] }
+            ],
+            3: [
+                { emoji: "🐶", name: "Perro", syllables: ["Pe", "rro"] }, { emoji: "", name: "Gato", syllables: ["Ga", "to"] },
+                { emoji: "🐸", name: "Rana", syllables: ["Ra", "na"] }, { emoji: "🐮", name: "Vaca", syllables: ["Va", "ca"] },
+                { emoji: "🐟", name: "Pez", syllables: ["Pez"] }, { emoji: "🐷", name: "Cerdo", syllables: ["Cer", "do"] },
+                { emoji: "🐰", name: "Conejo", syllables: ["Co", "ne", "jo"] }, { emoji: "🐢", name: "Tortuga", syllables: ["Tor", "tu", "ga"] },
+                { emoji: "🦁", name: "León", syllables: ["Le", "ón"] }, { emoji: "🐵", name: "Mono", syllables: ["Mo", "no"] },
+                { emoji: "🦆", name: "Pato", syllables: ["Pa", "to"] }, { emoji: "🐍", name: "Serpiente", syllables: ["Ser", "pien", "te"] }
+            ],
+            4: [
+                { emoji: "🐶", name: "Perro", syllables: ["Pe", "rro"] }, { emoji: "🐱", name: "Gato", syllables: ["Ga", "to"] },
+                { emoji: "🐸", name: "Rana", syllables: ["Ra", "na"] }, { emoji: "🐮", name: "Vaca", syllables: ["Va", "ca"] },
+                { emoji: "", name: "Conejo", syllables: ["Co", "ne", "jo"] }, { emoji: "🐢", name: "Tortuga", syllables: ["Tor", "tu", "ga"] },
+                { emoji: "🦁", name: "León", syllables: ["Le", "ón"] }, { emoji: "🐘", name: "Elefante", syllables: ["E", "le", "fan", "te"] },
+                { emoji: "🦋", name: "Mariposa", syllables: ["Ma", "ri", "po", "sa"] }, { emoji: "🐍", name: "Serpiente", syllables: ["Ser", "pien", "te"] },
+                { emoji: "🦜", name: "Loro", syllables: ["Lo", "ro"] }, { emoji: "🐧", name: "Pingüino", syllables: ["Pin", "güi", "no"] },
+                { emoji: "🦊", name: "Zorro", syllables: ["Zo", "rro"] }, { emoji: "🐺", name: "Lobo", syllables: ["Lo", "bo"] }
+            ],
+            5: [
+                { emoji: "🐶", name: "Perro", syllables: ["Pe", "rro"] }, { emoji: "🐱", name: "Gato", syllables: ["Ga", "to"] },
+                { emoji: "🐸", name: "Rana", syllables: ["Ra", "na"] }, { emoji: "🐰", name: "Conejo", syllables: ["Co", "ne", "jo"] },
+                { emoji: "🐢", name: "Tortuga", syllables: ["Tor", "tu", "ga"] }, { emoji: "🦁", name: "León", syllables: ["Le", "ón"] },
+                { emoji: "🐘", name: "Elefante", syllables: ["E", "le", "fan", "te"] }, { emoji: "🦋", name: "Mariposa", syllables: ["Ma", "ri", "po", "sa"] },
+                { emoji: "🐍", name: "Serpiente", syllables: ["Ser", "pien", "te"] }, { emoji: "🐧", name: "Pingüino", syllables: ["Pin", "güi", "no"] },
+                { emoji: "🦊", name: "Zorro", syllables: ["Zo", "rro"] }, { emoji: "🐺", name: "Lobo", syllables: ["Lo", "bo"] },
+                { emoji: "🦅", name: "Águila", syllables: ["Á", "gui", "la"] }, { emoji: "🐊", name: "Cocodrilo", syllables: ["Co", "co", "dri", "lo"] },
+                { emoji: "🐋", name: "Ballena", syllables: ["Ba", "lle", "na"] }, { emoji: "🦩", name: "Flamenco", syllables: ["Fla", "men", "co"] }
+            ]
+        };
+
+        // ===== ESTADO DEL JUEGO =====
+        let gameState = { age: 2, name: "", currentQuestion: 0, score: 0, totalQuestions: 0, questions: [], answered: false };
+
+        // ===== UTILIDADES =====
+        function generateWrongSyllables(correctSyllable, animalList) {
+            const allSyllables = new Set();
+            animalList.forEach(a => a.syllables.forEach(s => {
+                if (s.toLowerCase() !== correctSyllable.toLowerCase()) allSyllables.add(s);
+            }));
+            // Fallback si no hay suficientes
+            const fallback = ["ba", "ca", "da", "fa", "la", "ma", "na", "pa", "ra", "sa", "ta", "xa", "bo", "do", "fo", "lo", "mo", "no", "po", "ro", "so", "to"];
+            fallback.forEach(s => { if(s.toLowerCase() !== correctSyllable.toLowerCase()) allSyllables.add(s); });
+            return [...allSyllables].sort(() => Math.random() - 0.5).slice(0, 3);
+        }
+
+        function generateWrongSyllablesForWord(correctSyllables, animalList) {
+            const wrong = [];
+            const shuffled = [...animalList].sort(() => Math.random() - 0.5);
+            for (const animal of shuffled) {
+                if (animal.syllables.join("") !== correctSyllables.join("")) {
+                    for (const s of animal.syllables) {
+                        if (!correctSyllables.includes(s) && !wrong.includes(s)) wrong.push(s);
+                    }
+                }
+                if (wrong.length >= 4) break;
+            }
+            return wrong;
+        }
+
+        // ===== GENERAR PREGUNTAS (CORREGIDO) =====
+        function generateQuestions() {
+            const age = gameState.age;
+            const animalList = animals[age];
+            const numQuestions = levelDescriptions[age].questions;
+            let questions = [];
+            const shuffled = [...animalList].sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < Math.min(numQuestions, shuffled.length); i++) {
+                const animal = shuffled[i % shuffled.length];
+                let question = {};
+
+                if (age === 2) {
+                    const wrongAnimals = animalList.filter(a => a.name !== animal.name).sort(() => Math.random() - 0.5).slice(0, 2);
+                    const options = [animal, ...wrongAnimals].sort(() => Math.random() - 0.5);
+                    question = {
+                        type: "identify", emoji: animal.emoji, text: "¿Quién es este animalito?",
+                        options: options.map(o => ({ emoji: o.emoji, text: o.name, correct: o.name === animal.name })),
+                        correctIndex: options.findIndex(o => o.name === animal.name)
+                    };
+                } else if (age === 3) {
+                    const types = ["matchName", "firstSyllable", "identifyEmoji"];
+                    const type = types[i % 3];
+
+                    if (type === "matchName") {
+                        const wrongAnimals = animalList.filter(a => a.name !== animal.name).sort(() => Math.random() - 0.5).slice(0, 2);
+                        const options = [animal, ...wrongAnimals].sort(() => Math.random() - 0.5);
+                        question = {
+                            type: "matchName", emoji: animal.emoji, text: "¿Cómo se llama este animal?",
+                            options: options.map(o => ({ emoji: "", text: o.name, correct: o.name === animal.name })),
+                            correctIndex: options.findIndex(o => o.name === animal.name)
+                        };
+                    } else if (type === "firstSyllable") {
+                        // ✅ CORREGIDO: Estructura de objetos consistente
+                        const correctSyllable = animal.syllables[0];
+                        const wrongSyllables = generateWrongSyllables(correctSyllable, animalList);
+                        const opts = [
+                            { text: correctSyllable, correct: true },
+                            { text: wrongSyllables[0] || "xa", correct: false },
+                            { text: wrongSyllables[1] || "bo", correct: false }
+                        ].sort(() => Math.random() - 0.5);
+                        question = {
+                            type: "firstSyllable", emoji: animal.emoji, text: `¿Con qué sílaba empieza "${animal.name}"?`,
+                            syllables: animal.syllables, options: opts,
+                            correctIndex: opts.findIndex(o => o.correct)
+                        };
+                    } else {
+                        const wrongAnimals = animalList.filter(a => a.name !== animal.name).sort(() => Math.random() - 0.5).slice(0, 2);
+                        const options = [animal, ...wrongAnimals].sort(() => Math.random() - 0.5);
+                        question = {
+                            type: "identifyEmoji", text: `¿Cuál es el/la "${animal.name}"?`,
+                            options: options.map(o => ({ emoji: o.emoji, text: o.name, correct: o.name === animal.name })),
+                            correctIndex: options.findIndex(o => o.name === animal.name)
+                        };
+                    }
+                } else if (age === 4) {
+                    const types = ["matchName", "formWord", "countSyllables", "missingSyllable"];
+                    const type = types[i % 4];
+
+                    if (type === "matchName") {
+                        const wrongAnimals = animalList.filter(a => a.name !== animal.name).sort(() => Math.random() - 0.5).slice(0, 2);
+                        const options = [animal, ...wrongAnimals].sort(() => Math.random() - 0.5);
+                        question = {
+                            type: "matchName", emoji: animal.emoji, text: "¿Cómo se llama este animal?",
+                            options: options.map(o => ({ emoji: "", text: o.name, correct: o.name === animal.name })),
+                            correctIndex: options.findIndex(o => o.name === animal.name)
+                        };
+                    } else if (type === "formWord") {
+                        const correctSyllables = animal.syllables;
+                        const wrongSyllables = generateWrongSyllablesForWord(animal.syllables, animalList);
+                        question = {
+                            type: "formWord", emoji: animal.emoji, text: `Forma la palabra "${animal.name}" tocando las sílabas en orden`,
+                            correctSyllables: correctSyllables,
+                            options: [...correctSyllables, ...wrongSyllables.slice(0, 2)].sort(() => Math.random() - 0.5)
+                        };
+                    } else if (type === "countSyllables") {
+                        const numSyllables = animal.syllables.length;
+                        const wrongNumbers = [];
+                        for (let n = 1; n <= 4; n++) if (n !== numSyllables) wrongNumbers.push(n);
+                        const opts = [numSyllables, ...wrongNumbers.slice(0, 2)].sort(() => Math.random() - 0.5);
+                        question = {
+                            type: "countSyllables", emoji: animal.emoji, text: `¿Cuántas sílabas tiene "${animal.name}"?`,
+                            options: opts.map(n => ({ emoji: "🔊", text: n.toString(), correct: n === numSyllables })),
+                            correctIndex: opts.findIndex(n => n === numSyllables)
+                        };
+                    } else {
+                        // missingSyllable ✅ CORREGIDO
+                        const missingIndex = Math.floor(Math.random() * animal.syllables.length);
+                        const correctSyllable = animal.syllables[missingIndex];
+                        const wrongSyllables = generateWrongSyllables(correctSyllable, animalList);
+                        const displaySyllables = animal.syllables.map((s, idx) => idx === missingIndex ? "" : s);
+                        const opts = [correctSyllable, ...wrongSyllables.slice(0, 2)].sort(() => Math.random() - 0.5);
+                        question = {
+                            type: "missingSyllable", emoji: animal.emoji, text: `¿Qué sílaba falta en "${animal.name}"?`,
+                            displaySyllables: displaySyllables,
+                            options: opts.map(s => ({ text: s, correct: s === correctSyllable })),
+                            correctIndex: opts.findIndex(s => s === correctSyllable)
+                        };
+                    }
+                } else if (age === 5) {
+                    const types = ["matchName", "formWord", "countSyllables", "missingSyllable", "identifyBySound", "trueFalse"];
+                    const type = types[i % 6];
+
+                    if (type === "matchName") {
+                        const wrongAnimals = animalList.filter(a => a.name !== animal.name).sort(() => Math.random() - 0.5).slice(0, 3);
+                        const options = [animal, ...wrongAnimals].sort(() => Math.random() - 0.5);
+                        question = {
+                            type: "matchName", emoji: animal.emoji, text: "¿Cómo se llama este animal?",
+                            options: options.map(o => ({ emoji: "", text: o.name, correct: o.name === animal.name })),
+                            correctIndex: options.findIndex(o => o.name === animal.name)
+                        };
+                    } else if (type === "formWord") {
+                        const correctSyllables = animal.syllables;
+                        const wrongSyllables = generateWrongSyllablesForWord(animal.syllables, animalList);
+                        question = {
+                            type: "formWord", emoji: animal.emoji, text: `Forma la palabra "${animal.name}" tocando las sílabas en orden`,
+                            correctSyllables: correctSyllables,
+                            options: [...correctSyllables, ...wrongSyllables.slice(0, 3)].sort(() => Math.random() - 0.5)
+                        };
+                    } else if (type === "countSyllables") {
+                        const numSyllables = animal.syllables.length;
+                        const wrongNumbers = [];
+                        for (let n = 1; n <= 5; n++) if (n !== numSyllables) wrongNumbers.push(n);
+                        const opts = [numSyllables, ...wrongNumbers.slice(0, 3)].sort(() => Math.random() - 0.5);
+                        question = {
+                            type: "countSyllables", emoji: animal.emoji, text: `¿Cuántas sílabas tiene "${animal.name}"?`,
+                            options: opts.map(n => ({ emoji: "🔊", text: n.toString(), correct: n === numSyllables })),
+                            correctIndex: opts.findIndex(n => n === numSyllables)
+                        };
+                    } else if (type === "missingSyllable") {
+                        const missingIndex = Math.floor(Math.random() * animal.syllables.length);
+                        const correctSyllable = animal.syllables[missingIndex];
+                        const wrongSyllables = generateWrongSyllables(correctSyllable, animalList);
+                        const displaySyllables = animal.syllables.map((s, idx) => idx === missingIndex ? "" : s);
+                        const opts = [correctSyllable, ...wrongSyllables.slice(0, 2)].sort(() => Math.random() - 0.5);
+                        question = {
+                            type: "missingSyllable", emoji: animal.emoji, text: `¿Qué sílaba falta?`,
+                            displaySyllables: displaySyllables,
+                            options: opts.map(s => ({ text: s, correct: s === correctSyllable })),
+                            correctIndex: opts.findIndex(s => s === correctSyllable)
+                        };
+                    } else if (type === "identifyBySound") {
+                        const wrongAnimals = animalList.filter(a => a.name !== animal.name).sort(() => Math.random() - 0.5).slice(0, 3);
+                        const options = [animal, ...wrongAnimals].sort(() => Math.random() - 0.5);
+                        question = {
+                            type: "identifyBySound", text: `¿Cuál animal empieza como "${animal.syllables[0]}"...?`,
+                            options: options.map(o => ({ emoji: o.emoji, text: o.name, correct: o.name === animal.name })),
+                            correctIndex: options.findIndex(o => o.name === animal.name)
+                        };
+                    } else {
+                        const isTrue = Math.random() > 0.5;
+                        let shownSyllables = isTrue ? animal.syllables.join("-") : (() => {
+                            const w = [...animal.syllables]; w[Math.floor(Math.random() * w.length)] = "xa"; return w.join("-");
+                        })();
+                        question = {
+                            type: "trueFalse", emoji: animal.emoji, text: `"${animal.name}" se escribe: ${shownSyllables}`,
+                            options: [
+                                { emoji: "✅", text: "¡Sí, correcto!", correct: isTrue },
+                                { emoji: "❌", text: "No, está mal", correct: !isTrue }
+                            ],
+                            correctIndex: isTrue ? 0 : 1
+                        };
+                    }
+                }
+                questions.push(question);
+            }
+            return questions;
+        }
+
+        // ===== NAVEGACIÓN Y LÓGICA =====
+        function initBackground() {
+            const bg = document.getElementById('bgAnimated');
+            const colors = ['#ff6b6b', '#ffd93d', '#6c5ce7', '#00b894', '#fd79a8', '#74b9ff', '#55efc4'];
+            for (let i = 0; i < 20; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                const size = Math.random() * 80 + 20;
+                bubble.style.width = size + 'px'; bubble.style.height = size + 'px';
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.background = colors[Math.floor(Math.random() * colors.length)];
+                bubble.style.animationDuration = (Math.random() * 15 + 10) + 's';
+                bubble.style.animationDelay = (Math.random() * 10) + 's';
+                bg.appendChild(bubble);
+            }
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function selectAge(age) {
+            gameState.age = age;
+            document.querySelectorAll('.age-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.closest('.age-btn').classList.add('selected');
+            const info = levelDescriptions[age];
+            document.getElementById('levelInfo').innerHTML = `
+                <h3>🎯 Nivel: ${info.name}</h3>
+                <p>${info.desc}</p>
+                <p>📝 ${info.questions} preguntas | ⭐ Gana hasta ${info.questions} estrellas</p>
+            `;
+            document.getElementById('btnStartGame').classList.remove('hidden');
+        }
+
+        function startGame() {
+            gameState.name = document.getElementById('childName').value.trim() || "Amiguito";
+            gameState.currentQuestion = 0; gameState.score = 0;
+            gameState.questions = generateQuestions();
+            gameState.totalQuestions = gameState.questions.length;
+            gameState.answered = false;
+            document.getElementById('gameLevelBadge').textContent = `Nivel ${gameState.age} años`;
+            updateGameUI();
+            showScreen('screenGame');
+            renderQuestion();
+        }
+
+        function updateGameUI() {
+            document.getElementById('gameProgress').textContent = `${gameState.currentQuestion + 1} / ${gameState.totalQuestions}`;
+            document.getElementById('gameScore').textContent = `⭐ ${gameState.score}`;
+            document.getElementById('progressBar').style.width = `${((gameState.currentQuestion) / gameState.totalQuestions) * 100}%`;
+        }
+
+        function renderQuestion() {
+            gameState.answered = false;
+            document.getElementById('nextBtnContainer').classList.add('hidden');
+            const q = gameState.questions[gameState.currentQuestion];
+            const card = document.getElementById('questionCard');
+            const optionsContainer = document.getElementById('optionsContainer');
+
+            const typeLabels = {
+                "identify": "🔍 Encuentra el animal", "matchName": " ¿Cómo se llama?",
+                "firstSyllable": "🔤 Primera sílaba", "identifyEmoji": "👀 Busca el animal",
+                "formWord": "🧩 Forma la palabra", "countSyllables": " Cuenta sílabas",
+                "missingSyllable": "❓ ¿Qué falta?", "identifyBySound": "👂 ¿Cuál empieza así?",
+                "trueFalse": "✅ ¿Verdadero o falso?"
+            };
+
+            let cardHTML = `<div class="question-type">${typeLabels[q.type] || "🎯 Pregunta"}</div>`;
+            if (q.emoji && q.type !== "trueFalse") cardHTML += `<div class="question-emoji">${q.emoji}</div>`;
+            cardHTML += `<div class="question-text">${q.text}</div>`;
+
+            if (q.type === "missingSyllable" && q.displaySyllables) {
+                cardHTML += `<div class="syllable-display">${q.displaySyllables.map(s => s === "" ? `<div class="syllable-box empty">?</div>` : `<div class="syllable-box">${s}</div>`).join('')}</div>`;
+            }
+            if (q.type === "firstSyllable" && q.syllables) {
+                cardHTML += `<div class="syllable-display">${q.syllables.map((s, i) => `<div class="syllable-box" style="opacity: ${1 - (i * 0.3)}">${s}</div>`).join('')}</div>`;
+            }
+
+            card.innerHTML = cardHTML;
+
+            if (q.type === "formWord") {
+                optionsContainer.innerHTML = `<div class="syllable-options">${q.options.map((syl, idx) => `<button class="syllable-option-btn" onclick="checkSyllableWord('${syl}', ${idx})" id="sylBtn${idx}">${syl}</button>`).join('')}</div><div class="formed-word" id="formedWord"></div>`;
+            } else {
+                const colsClass = q.options.length > 3 ? "three-cols" : "";
+                optionsContainer.innerHTML = `<div class="options-grid ${colsClass}">${q.options.map((opt, idx) => `<button class="option-btn" onclick="checkAnswer(${idx})" id="optBtn${idx}">${opt.emoji ? `<span class="option-emoji">${opt.emoji}</span>` : ''}<span class="option-text">${opt.text}</span></button>`).join('')}</div>`;
+            }
+        }
+
+        let formedSyllables = [];
+        function checkSyllableWord(syl, btnIdx) {
+            if (gameState.answered) return;
+            const q = gameState.questions[gameState.currentQuestion];
+            const expectedSyllable = q.correctSyllables[formedSyllables.length];
+            const btn = document.getElementById(`sylBtn${btnIdx}`);
+
+            if (syl === expectedSyllable) {
+                btn.classList.add('correct'); btn.style.pointerEvents = 'none';
+                formedSyllables.push(syl);
+                document.getElementById('formedWord').innerHTML += `<div class="formed-syllable">${syl}</div>`;
+                if (formedSyllables.length === q.correctSyllables.length) {
+                    gameState.answered = true; gameState.score++;
+                    showFeedback(true); updateGameUI();
+                    setTimeout(() => {
+                        formedSyllables = [];
+                        if (gameState.currentQuestion < gameState.totalQuestions - 1) { gameState.currentQuestion++; updateGameUI(); renderQuestion(); }
+                        else showResults();
+                    }, 1500);
+                }
+            } else {
+                btn.classList.add('wrong'); setTimeout(() => btn.classList.remove('wrong'), 600);
+            }
+        }
+
+        function checkAnswer(idx) {
+            if (gameState.answered) return;
+            gameState.answered = true;
+            const q = gameState.questions[gameState.currentQuestion];
+            const isCorrect = q.options[idx].correct;
+            const btn = document.getElementById(`optBtn${idx}`);
+
+            if (isCorrect) {
+                btn.classList.add('correct'); gameState.score++; showFeedback(true);
+            } else {
+                btn.classList.add('wrong');
+                const correctIdx = q.options.findIndex(o => o.correct);
+                if (correctIdx !== -1) setTimeout(() => document.getElementById(`optBtn${correctIdx}`).classList.add('correct'), 500);
+                showFeedback(false);
+            }
+            updateGameUI();
+            setTimeout(() => {
+                if (gameState.currentQuestion < gameState.totalQuestions - 1) { gameState.currentQuestion++; updateGameUI(); renderQuestion(); }
+                else showResults();
+            }, 2000);
+        }
+
+        function showFeedback(isCorrect) {
+            const overlay = document.getElementById('feedbackOverlay');
+            const emoji = document.getElementById('feedbackEmoji');
+            const text = document.getElementById('feedbackText');
+            if (isCorrect) {
+                const msgs = ["¡Muy bien! 🎉", "¡Genial! 🌟", "¡Excelente! 💫", "¡Fantástico! 🎊", "¡Bravo! 👏", "¡Súper! "];
+                const emos = ["", "🌟", "💫", "🎊", "👏", "", "🥳", "💪"];
+                emoji.textContent = emos[Math.floor(Math.random() * emos.length)];
+                text.textContent = msgs[Math.floor(Math.random() * msgs.length)];
+            } else {
+                text.textContent = "¡Casi! ¡Sigue intentando! 💪"; emoji.textContent = "🤗";
+            }
+            overlay.classList.add('active');
+            setTimeout(() => overlay.classList.remove('active'), 1200);
+        }
+
+        function nextQuestion() {
+            if (gameState.currentQuestion < gameState.totalQuestions - 1) { gameState.currentQuestion++; updateGameUI(); renderQuestion(); }
+            else showResults();
+        }
+
+        function showResults() {
+            const percentage = (gameState.score / gameState.totalQuestions) * 100;
+            let trophy, title, message;
+            if (percentage >= 90) { trophy = "🏆"; title = `¡${gameState.name}, eres increíble!`; message = "¡Has ganado casi todas las estrellas! ¡Eres un campeón!"; }
+            else if (percentage >= 70) { trophy = "🥇"; title = `¡Muy bien, ${gameState.name}!`; message = "¡Lo hiciste genial! ¡Sigue practicando!"; }
+            else if (percentage >= 50) { trophy = "🥈"; title = `¡Buen trabajo, ${gameState.name}!`; message = "¡Vas por buen camino! ¡Practica un poco más!"; }
+            else { trophy = "🥉"; title = `¡Sigue intentando, ${gameState.name}!`; message = "¡Cada intento te hace más fuerte!"; }
+
+            document.getElementById('resultsTrophy').textContent = trophy;
+            document.getElementById('resultsTitle').textContent = title;
+            document.getElementById('resultsScore').textContent = `Acertaste ${gameState.score} de ${gameState.totalQuestions}`;
+            document.getElementById('resultsMessage').textContent = message;
+
+            const starsCount = Math.ceil((gameState.score / gameState.totalQuestions) * 3);
+            document.getElementById('resultsStars').innerHTML = Array(3).fill(0).map((_, i) => `<span class="star">${i < starsCount ? '⭐' : '☆'}</span>`).join('');
+
+            showScreen('screenResults');
+            if (percentage >= 70) launchConfetti();
+        }
+
+        function launchConfetti() {
+            const colors = ['#ff6b6b', '#ffd93d', '#6c5ce7', '#00b894', '#fd79a8', '#74b9ff', '#ff8e53'];
+            for (let i = 0; i < 60; i++) {
+                setTimeout(() => {
+                    const c = document.createElement('div'); c.className = 'confetti-piece';
+                    c.style.left = Math.random() * 100 + '%';
+                    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    c.style.width = (Math.random() * 10 + 5) + 'px'; c.style.height = c.style.width;
+                    c.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    c.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    document.body.appendChild(c);
+                    setTimeout(() => c.remove(), 4000);
+                }, i * 50);
+            }
+        }
+
+        function restartGame() {
+            gameState.currentQuestion = 0; gameState.score = 0;
+            gameState.questions = generateQuestions(); gameState.totalQuestions = gameState.questions.length;
+            gameState.answered = false;
+            document.getElementById('gameLevelBadge').textContent = `Nivel ${gameState.age} años`;
+            updateGameUI(); showScreen('screenGame'); renderQuestion();
+        }
+
+        function changeAge() { showScreen('screenAge'); }
+
+        // ===== INICIO =====
+        initBackground();
+    </script>
+</body>
+</html>
